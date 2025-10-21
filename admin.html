@@ -21,6 +21,9 @@
         .controls { 
             margin: 20px 0; 
         }
+        .quick-times {
+            margin: 15px 0;
+        }
         button { 
             background: #2d3748; 
             color: white; 
@@ -36,6 +39,11 @@
             background: #4a5568;
             transform: translateY(-2px);
         }
+        .quick-btn {
+            background: #4a5568;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
         .admin-badge { 
             background: #e53e3e; 
             padding: 5px 10px; 
@@ -48,18 +56,34 @@
             font-size: 14px;
             opacity: 0.7;
         }
+        .current-time {
+            font-size: 16px;
+            margin: 10px 0;
+            color: #cbd5e0;
+        }
     </style>
 </head>
 <body>
     <div id="app">
         <h1>⏰ Управление таймером <span class="admin-badge">АДМИН</span></h1>
         <div class="timer" id="timer">10:00</div>
+        <div class="current-time" id="currentTime">Установлено: 10 минут</div>
         
         <div class="controls">
             <button onclick="startTimer()">▶️ Старт</button>
             <button onclick="pauseTimer()">⏸️ Пауза</button>
-            <button onclick="resetTimer()">🔄 Сброс 10:00</button>
+            <button onclick="resetTimer()">🔄 Сброс</button>
             <button onclick="setCustomTime()">⏱️ Установить время</button>
+        </div>
+        
+        <div class="quick-times">
+            <h3>Быстрое время:</h3>
+            <button class="quick-btn" onclick="setTime(1)">1 мин</button>
+            <button class="quick-btn" onclick="setTime(3)">3 мин</button>
+            <button class="quick-btn" onclick="setTime(5)">5 мин</button>
+            <button class="quick-btn" onclick="setTime(10)">10 мин</button>
+            <button class="quick-btn" onclick="setTime(15)">15 мин</button>
+            <button class="quick-btn" onclick="setTime(30)">30 мин</button>
         </div>
         
         <div class="info">
@@ -71,7 +95,7 @@
     <script>
         // Глобальное состояние таймера
         window.timerData = {
-            timeLeft: 600,
+            timeLeft: 600, // 10 минут по умолчанию
             isRunning: false,
             timerInterval: null
         };
@@ -82,6 +106,7 @@
             const timerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             
             document.getElementById('timer').textContent = timerText;
+            document.getElementById('currentTime').textContent = `Установлено: ${minutes} минут`;
             
             // Сохраняем в localStorage для viewer
             localStorage.setItem('channelTimerValue', window.timerData.timeLeft);
@@ -93,6 +118,7 @@
                 clearInterval(window.timerData.timerInterval);
                 window.timerData.isRunning = false;
                 document.getElementById('timer').style.color = '#f56565';
+                document.getElementById('currentTime').textContent = '⏰ Время вышло!';
             }
         }
 
@@ -109,18 +135,49 @@
 
         function resetTimer() {
             window.timerData.isRunning = false;
-            window.timerData.timeLeft = 600;
+            window.timerData.timeLeft = 600; // 10 минут
             document.getElementById('timer').style.color = '#90cdf4';
             updateTimerDisplay();
         }
 
         function setCustomTime() {
             const minutes = prompt('Установите время в минутах:', '10');
-            if (minutes && !isNaN(minutes)) {
-                window.timerData.timeLeft = parseInt(minutes) * 60;
-                window.timerData.isRunning = false;
-                updateTimerDisplay();
+            if (minutes && !isNaN(minutes) && minutes > 0) {
+                setTime(parseInt(minutes));
             }
+        }
+
+        function setTime(minutes) {
+            window.timerData.isRunning = false;
+            window.timerData.timeLeft = minutes * 60;
+            document.getElementById('timer').style.color = '#90cdf4';
+            updateTimerDisplay();
+            
+            // Показываем подтверждение
+            showNotification(`Таймер установлен на ${minutes} минут`);
+        }
+
+        function showNotification(message) {
+            // Временное уведомление
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #38a169;
+                color: white;
+                padding: 10px 20px;
+                border-radius: 10px;
+                z-index: 1000;
+                font-size: 14px;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 2000);
         }
 
         // Основной цикл таймера
