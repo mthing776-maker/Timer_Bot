@@ -1,61 +1,140 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Таймер Админ</title>
+    <title>Управление таймером</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { text-align: center; padding: 20px; background: #2d3748; color: white; }
-        .timer { font-size: 48px; margin: 20px 0; }
-        button { background: white; color: #2d3748; border: none; padding: 10px 20px; margin: 5px; border-radius: 10px; }
+        body { 
+            text-align: center; 
+            padding: 20px; 
+            background: #1a365d; 
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        .timer { 
+            font-size: 52px; 
+            font-weight: bold; 
+            margin: 20px 0; 
+            color: #90cdf4;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        .controls { 
+            margin: 20px 0; 
+        }
+        button { 
+            background: #2d3748; 
+            color: white; 
+            border: none; 
+            padding: 12px 24px; 
+            margin: 8px; 
+            border-radius: 12px; 
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #4a5568;
+            transform: translateY(-2px);
+        }
+        .admin-badge { 
+            background: #e53e3e; 
+            padding: 5px 10px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            margin-left: 10px;
+        }
+        .info {
+            margin-top: 30px;
+            font-size: 14px;
+            opacity: 0.7;
+        }
     </style>
 </head>
 <body>
-    <h1>⏰ Таймер (Админ)</h1>
-    <div class="timer" id="timer">10:00</div>
-    <div>
-        <button onclick="startTimer()">Старт</button>
-        <button onclick="pauseTimer()">Пауза</button>
-        <button onclick="resetTimer()">Сброс</button>
-        <button onclick="setCustomTime()">Установить время</button>
+    <div id="app">
+        <h1>⏰ Управление таймером <span class="admin-badge">АДМИН</span></h1>
+        <div class="timer" id="timer">10:00</div>
+        
+        <div class="controls">
+            <button onclick="startTimer()">▶️ Старт</button>
+            <button onclick="pauseTimer()">⏸️ Пауза</button>
+            <button onclick="resetTimer()">🔄 Сброс 10:00</button>
+            <button onclick="setCustomTime()">⏱️ Установить время</button>
+        </div>
+        
+        <div class="info">
+            Таймер синхронизирован с каналом<br>
+            Подписчики видят текущее время в реальном времени
+        </div>
     </div>
 
     <script>
-        let timeLeft = 600;
-        let isRunning = false;
-        let timerInterval;
+        // Глобальное состояние таймера
+        window.timerData = {
+            timeLeft: 600,
+            isRunning: false,
+            timerInterval: null
+        };
 
-        function updateTimer() {
-            const minutes = Math.floor(timeLeft / 60);
-            const seconds = timeLeft % 60;
-            document.getElementById('timer').textContent = 
-                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        function updateTimerDisplay() {
+            const minutes = Math.floor(window.timerData.timeLeft / 60);
+            const seconds = window.timerData.timeLeft % 60;
+            const timerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             
-            // Сохраняем время в localStorage (для viewer.html)
-            localStorage.setItem('timerValue', timeLeft);
-            localStorage.setItem('timerRunning', isRunning);
+            document.getElementById('timer').textContent = timerText;
             
-            if (timeLeft <= 0) {
-                clearInterval(timerInterval);
-                isRunning = false;
-            } else if (isRunning) {
-                timeLeft--;
+            // Сохраняем в localStorage для viewer
+            localStorage.setItem('channelTimerValue', window.timerData.timeLeft);
+            localStorage.setItem('channelTimerRunning', window.timerData.isRunning);
+            localStorage.setItem('channelTimerUpdated', Date.now());
+            localStorage.setItem('channelTimerText', timerText);
+            
+            if (window.timerData.timeLeft <= 0 && window.timerData.isRunning) {
+                clearInterval(window.timerData.timerInterval);
+                window.timerData.isRunning = false;
+                document.getElementById('timer').style.color = '#f56565';
             }
         }
 
-        function startTimer() { isRunning = true; }
-        function pauseTimer() { isRunning = false; }
-        function resetTimer() { timeLeft = 600; isRunning = false; updateTimer(); }
-        
+        function startTimer() {
+            if (!window.timerData.isRunning && window.timerData.timeLeft > 0) {
+                window.timerData.isRunning = true;
+                document.getElementById('timer').style.color = '#90cdf4';
+            }
+        }
+
+        function pauseTimer() {
+            window.timerData.isRunning = false;
+        }
+
+        function resetTimer() {
+            window.timerData.isRunning = false;
+            window.timerData.timeLeft = 600;
+            document.getElementById('timer').style.color = '#90cdf4';
+            updateTimerDisplay();
+        }
+
         function setCustomTime() {
-            const minutes = prompt('Минуты:', '10');
-            if (minutes) {
-                timeLeft = parseInt(minutes) * 60;
-                updateTimer();
+            const minutes = prompt('Установите время в минутах:', '10');
+            if (minutes && !isNaN(minutes)) {
+                window.timerData.timeLeft = parseInt(minutes) * 60;
+                window.timerData.isRunning = false;
+                updateTimerDisplay();
             }
         }
 
-        setInterval(updateTimer, 1000);
-        updateTimer();
+        // Основной цикл таймера
+        setInterval(() => {
+            if (window.timerData.isRunning && window.timerData.timeLeft > 0) {
+                window.timerData.timeLeft--;
+                updateTimerDisplay();
+            }
+        }, 1000);
+
+        // Инициализация
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+        updateTimerDisplay();
     </script>
 </body>
 </html>
