@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Обратный таймер</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .timer {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .controls {
+            margin: 20px 0;
+        }
+        button {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 12px 24px;
+            margin: 8px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+        .completed {
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>⏰ Обратный таймер</h1>
+        <div class="timer" id="timer">10:00</div>
+        <div class="controls">
+            <button onclick="startTimer()">▶️ Старт</button>
+            <button onclick="pauseTimer()">⏸️ Пауза</button>
+            <button onclick="resetTimer()">🔄 Сброс</button>
+        </div>
+        <div style="margin-top: 20px; font-size: 14px; opacity: 0.8;">
+            Таймер работает в реальном времени
+        </div>
+    </div>
+
+    <script>
+        let timerInterval;
+        let timeLeft = 600; // 10 минут в секундах
+        let isRunning = false;
+        const timerElement = document.getElementById('timer');
+
+        function updateTimer() {
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                isRunning = false;
+                timerElement.innerHTML = '⏰ Время вышло!';
+                timerElement.classList.add('completed');
+                
+                // Вибрация в Telegram
+                if (Telegram.WebApp) {
+                    Telegram.WebApp.HapticFeedback.impactOccurred('heavy');
+                }
+                return;
+            }
+
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerElement.textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            timeLeft--;
+        }
+
+        function startTimer() {
+            if (!isRunning && timeLeft > 0) {
+                isRunning = true;
+                timerElement.classList.remove('completed');
+                timerInterval = setInterval(updateTimer, 1000);
+            }
+        }
+
+        function pauseTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 600;
+            isRunning = false;
+            timerElement.classList.remove('completed');
+            updateTimer();
+        }
+
+        // Инициализация Telegram Web App
+        if (Telegram.WebApp) {
+            Telegram.WebApp.ready();
+            Telegram.WebApp.expand();
+            Telegram.WebApp.setHeaderColor('#667eea');
+            Telegram.WebApp.setBackgroundColor('#667eea');
+        }
+
+        // Начальное обновление
+        updateTimer();
+    </script>
+</body>
+</html>
