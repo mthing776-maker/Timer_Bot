@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Таймер LIVE</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            margin-bottom: 30px;
+        }
+        
+        .channel-name {
+            font-size: 18px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .timer-display {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .timer {
+            font-size: 52px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .status {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .last-update {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+        
+        .info {
+            margin-top: 25px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="channel-name">📢 Таймер канала</div>
+            <h1>⏰ Таймер LIVE</h1>
+        </div>
+        
+        <div class="timer-display">
+            <div class="timer" id="timer">10:00</div>
+            <div class="status" id="status">⏳ Ожидание...</div>
+            <div class="last-update" id="lastUpdate">Обновляется в реальном времени</div>
+        </div>
+        
+        <div class="info">
+            Только для просмотра • Обновляется автоматически
+        </div>
+    </div>
+
+    <script>
+        // Функция форматирования времени
+        function formatTime(seconds) {
+            const days = Math.floor(seconds / (24 * 3600));
+            const hours = Math.floor((seconds % (24 * 3600)) / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            
+            if (days > 0) {
+                return `${days}д ${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            } else if (hours > 0) {
+                return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            } else {
+                return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+        }
+
+        // Обновление таймера
+        function updateViewerTimer() {
+            const savedTime = parseInt(localStorage.getItem('channelTimerValue')) || 600;
+            const isRunning = localStorage.getItem('channelTimerRunning') === 'true';
+            const lastUpdate = parseInt(localStorage.getItem('channelTimerUpdated')) || 0;
+            
+            // Проверяем актуальность данных (5 секунд)
+            const isDataFresh = (Date.now() - lastUpdate) < 5000;
+            
+            if (isDataFresh) {
+                let displayTime = savedTime;
+                
+                // Если таймер запущен, вычисляем прошедшее время
+                if (isRunning && savedTime > 0) {
+                    const timePassed = Math.floor((Date.now() - lastUpdate) / 1000);
+                    displayTime = Math.max(0, savedTime - timePassed);
+                }
+                
+                document.getElementById('timer').textContent = formatTime(displayTime);
+                
+                if (displayTime <= 0) {
+                    document.getElementById('status').textContent = '⏰ Время вышло!';
+                    document.getElementById('status').style.color = '#f56565';
+                    document.getElementById('timer').style.color = '#f56565';
+                } else if (isRunning) {
+                    document.getElementById('status').textContent = '🟢 Таймер идет...';
+                    document.getElementById('status').style.color = '#48bb78';
+                    document.getElementById('timer').style.color = '#48bb78';
+                } else {
+                    document.getElementById('status').textContent = '🟡 Таймер на паузе';
+                    document.getElementById('status').style.color = '#ed8936';
+                    document.getElementById('timer').style.color = '#ed8936';
+                }
+                
+                document.getElementById('lastUpdate').textContent = 'Обновлено только что';
+            } else {
+                document.getElementById('status').textContent = '⚪ Таймер не активен';
+                document.getElementById('status').style.color = '#a0aec0';
+                document.getElementById('timer').style.color = '#a0aec0';
+                document.getElementById('lastUpdate').textContent = 'Нет соединения с таймером';
+            }
+        }
+
+        // Инициализация
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+        
+        // Обновление каждую секунду
+        setInterval(updateViewerTimer, 1000);
+        updateViewerTimer();
+    </script>
+</body>
+</html>
