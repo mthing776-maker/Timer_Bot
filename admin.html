@@ -1,197 +1,450 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Управление таймером</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { 
-            text-align: center; 
-            padding: 20px; 
-            background: #1a365d; 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+            text-align: center;
         }
-        .timer { 
-            font-size: 52px; 
-            font-weight: bold; 
-            margin: 20px 0; 
-            color: #90cdf4;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
         }
-        .controls { 
-            margin: 20px 0; 
+        
+        .header {
+            margin-bottom: 30px;
         }
-        .quick-times {
-            margin: 15px 0;
-        }
-        button { 
-            background: #2d3748; 
-            color: white; 
-            border: none; 
-            padding: 12px 24px; 
-            margin: 8px; 
-            border-radius: 12px; 
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        button:hover {
-            background: #4a5568;
-            transform: translateY(-2px);
-        }
-        .quick-btn {
-            background: #4a5568;
-            padding: 8px 16px;
-            font-size: 14px;
-        }
-        .admin-badge { 
-            background: #e53e3e; 
-            padding: 5px 10px; 
-            border-radius: 20px; 
-            font-size: 12px; 
+        
+        .admin-badge {
+            background: #e53e3e;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
             margin-left: 10px;
         }
-        .info {
-            margin-top: 30px;
+        
+        .timer-display {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .timer {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .status {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        
+        .total-time {
             font-size: 14px;
             opacity: 0.7;
         }
-        .current-time {
+        
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
             font-size: 16px;
-            margin: 10px 0;
-            color: #cbd5e0;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+        
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary {
+            background: #4299e1;
+        }
+        
+        .btn-success {
+            background: #48bb78;
+        }
+        
+        .btn-warning {
+            background: #ed8936;
+        }
+        
+        .btn-danger {
+            background: #f56565;
+        }
+        
+        .time-inputs {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .input-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        
+        .input-group label {
+            font-size: 14px;
+            opacity: 0.9;
+            min-width: 80px;
+            text-align: left;
+        }
+        
+        .input-group input {
+            width: 80px;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.9);
+        }
+        
+        .quick-times {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .quick-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: white;
+            padding: 10px 5px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .quick-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #48bb78;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            z-index: 1000;
+            font-size: 14px;
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from { transform: translate(-50%, -100%); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+        
+        .share-section {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
         }
     </style>
 </head>
 <body>
-    <div id="app">
-        <h1>⏰ Управление таймером <span class="admin-badge">АДМИН</span></h1>
-        <div class="timer" id="timer">10:00</div>
-        <div class="current-time" id="currentTime">Установлено: 10 минут</div>
+    <div class="container">
+        <div class="header">
+            <h1>⏰ Управление таймером <span class="admin-badge">АДМИН</span></h1>
+        </div>
+        
+        <div class="timer-display">
+            <div class="timer" id="timer">10:00</div>
+            <div class="status" id="status">⏸️ На паузе</div>
+            <div class="total-time" id="totalTime">Всего: 10 минут</div>
+        </div>
         
         <div class="controls">
-            <button onclick="startTimer()">▶️ Старт</button>
-            <button onclick="pauseTimer()">⏸️ Пауза</button>
-            <button onclick="resetTimer()">🔄 Сброс</button>
-            <button onclick="setCustomTime()">⏱️ Установить время</button>
+            <button class="btn btn-success" onclick="startTimer()">▶️ Старт</button>
+            <button class="btn btn-warning" onclick="pauseTimer()">⏸️ Пауза</button>
+            <button class="btn btn-danger" onclick="resetTimer()">🔄 Сброс</button>
+            <button class="btn btn-primary" onclick="setCustomTime()">⏱️ Установить</button>
+        </div>
+        
+        <div class="time-inputs">
+            <h3 style="margin-bottom: 15px;">⚙️ Установить время</h3>
+            <div class="input-group">
+                <label>Дни:</label>
+                <input type="number" id="days" min="0" max="365" value="0">
+            </div>
+            <div class="input-group">
+                <label>Часы:</label>
+                <input type="number" id="hours" min="0" max="23" value="0">
+            </div>
+            <div class="input-group">
+                <label>Минуты:</label>
+                <input type="number" id="minutes" min="0" max="59" value="10">
+            </div>
+            <div class="input-group">
+                <label>Секунды:</label>
+                <input type="number" id="seconds" min="0" max="59" value="0">
+            </div>
         </div>
         
         <div class="quick-times">
-            <h3>Быстрое время:</h3>
-            <button class="quick-btn" onclick="setTime(1)">1 мин</button>
-            <button class="quick-btn" onclick="setTime(3)">3 мин</button>
-            <button class="quick-btn" onclick="setTime(5)">5 мин</button>
-            <button class="quick-btn" onclick="setTime(10)">10 мин</button>
-            <button class="quick-btn" onclick="setTime(15)">15 мин</button>
-            <button class="quick-btn" onclick="setTime(30)">30 мин</button>
+            <button class="quick-btn" onclick="setQuickTime(1)">1 мин</button>
+            <button class="quick-btn" onclick="setQuickTime(5)">5 мин</button>
+            <button class="quick-btn" onclick="setQuickTime(10)">10 мин</button>
+            <button class="quick-btn" onclick="setQuickTime(30)">30 мин</button>
+            <button class="quick-btn" onclick="setQuickTime(60)">1 час</button>
+            <button class="quick-btn" onclick="setQuickTime(360)">6 часов</button>
+            <button class="quick-btn" onclick="setQuickTime(720)">12 часов</button>
+            <button class="quick-btn" onclick="setQuickTime(1440)">1 день</button>
+            <button class="quick-btn" onclick="setQuickTime(10080)">7 дней</button>
         </div>
         
-        <div class="info">
-            Таймер синхронизирован с каналом<br>
-            Подписчики видят текущее время в реальном времени
+        <div class="share-section">
+            <button class="btn" onclick="shareToChannel()" style="width: 100%;">
+                📢 Опубликовать в канал
+            </button>
         </div>
     </div>
 
     <script>
         // Глобальное состояние таймера
-        window.timerData = {
-            timeLeft: 600, // 10 минут по умолчанию
+        const timerState = {
+            timeLeft: 600,
             isRunning: false,
-            timerInterval: null
+            lastUpdate: Date.now(),
+            totalSeconds: 600
         };
 
-        function updateTimerDisplay() {
-            const minutes = Math.floor(window.timerData.timeLeft / 60);
-            const seconds = window.timerData.timeLeft % 60;
-            const timerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            
-            document.getElementById('timer').textContent = timerText;
-            document.getElementById('currentTime').textContent = `Установлено: ${minutes} минут`;
-            
-            // Сохраняем в localStorage для viewer
-            localStorage.setItem('channelTimerValue', window.timerData.timeLeft);
-            localStorage.setItem('channelTimerRunning', window.timerData.isRunning);
-            localStorage.setItem('channelTimerUpdated', Date.now());
-            localStorage.setItem('channelTimerText', timerText);
-            
-            if (window.timerData.timeLeft <= 0 && window.timerData.isRunning) {
-                clearInterval(window.timerData.timerInterval);
-                window.timerData.isRunning = false;
-                document.getElementById('timer').style.color = '#f56565';
-                document.getElementById('currentTime').textContent = '⏰ Время вышло!';
+        // Загрузка сохраненного состояния
+        function loadState() {
+            const saved = localStorage.getItem('timerAdminState');
+            if (saved) {
+                const state = JSON.parse(saved);
+                const timePassed = Math.floor((Date.now() - state.lastUpdate) / 1000);
+                
+                if (state.isRunning && state.timeLeft > 0) {
+                    timerState.timeLeft = Math.max(0, state.timeLeft - timePassed);
+                    timerState.isRunning = timerState.timeLeft > 0;
+                } else {
+                    timerState.timeLeft = state.timeLeft;
+                    timerState.isRunning = false;
+                }
+                
+                timerState.totalSeconds = state.totalSeconds;
+                timerState.lastUpdate = Date.now();
+                
+                showNotification('Состояние восстановлено');
             }
         }
 
+        // Сохранение состояния
+        function saveState() {
+            const state = {
+                timeLeft: timerState.timeLeft,
+                isRunning: timerState.isRunning,
+                lastUpdate: Date.now(),
+                totalSeconds: timerState.totalSeconds
+            };
+            localStorage.setItem('timerAdminState', JSON.stringify(state));
+            
+            // Сохраняем для viewer
+            localStorage.setItem('channelTimerValue', timerState.timeLeft);
+            localStorage.setItem('channelTimerRunning', timerState.isRunning);
+            localStorage.setItem('channelTimerUpdated', Date.now());
+        }
+
+        // Форматирование времени
+        function formatTime(seconds) {
+            const days = Math.floor(seconds / (24 * 3600));
+            const hours = Math.floor((seconds % (24 * 3600)) / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            
+            if (days > 0) {
+                return `${days}д ${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            } else if (hours > 0) {
+                return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            } else {
+                return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+        }
+
+        function formatDetailedTime(seconds) {
+            const days = Math.floor(seconds / (24 * 3600));
+            const hours = Math.floor((seconds % (24 * 3600)) / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            
+            const parts = [];
+            if (days > 0) parts.push(`${days} д`);
+            if (hours > 0) parts.push(`${hours} ч`);
+            if (mins > 0) parts.push(`${mins} м`);
+            if (secs > 0 || parts.length === 0) parts.push(`${secs} с`);
+            
+            return parts.join(' ');
+        }
+
+        // Обновление дисплея
+        function updateDisplay() {
+            document.getElementById('timer').textContent = formatTime(timerState.timeLeft);
+            document.getElementById('totalTime').textContent = `Всего: ${formatDetailedTime(timerState.totalSeconds)}`;
+            
+            if (timerState.timeLeft <= 0) {
+                document.getElementById('status').textContent = '⏰ Время вышло!';
+                document.getElementById('status').style.color = '#f56565';
+                timerState.isRunning = false;
+            } else if (timerState.isRunning) {
+                document.getElementById('status').textContent = '🟢 Таймер идет...';
+                document.getElementById('status').style.color = '#48bb78';
+            } else {
+                document.getElementById('status').textContent = '⏸️ На паузе';
+                document.getElementById('status').style.color = '#ed8936';
+            }
+            
+            saveState();
+        }
+
+        // Управление таймером
         function startTimer() {
-            if (!window.timerData.isRunning && window.timerData.timeLeft > 0) {
-                window.timerData.isRunning = true;
-                document.getElementById('timer').style.color = '#90cdf4';
+            if (!timerState.isRunning && timerState.timeLeft > 0) {
+                timerState.isRunning = true;
+                timerState.lastUpdate = Date.now();
+                updateDisplay();
+                showNotification('Таймер запущен');
             }
         }
 
         function pauseTimer() {
-            window.timerData.isRunning = false;
+            timerState.isRunning = false;
+            updateDisplay();
+            showNotification('Таймер на паузе');
         }
 
         function resetTimer() {
-            window.timerData.isRunning = false;
-            window.timerData.timeLeft = 600; // 10 минут
-            document.getElementById('timer').style.color = '#90cdf4';
-            updateTimerDisplay();
+            timerState.isRunning = false;
+            timerState.timeLeft = 600;
+            timerState.totalSeconds = 600;
+            updateDisplay();
+            showNotification('Таймер сброшен');
         }
 
         function setCustomTime() {
-            const minutes = prompt('Установите время в минутах:', '10');
-            if (minutes && !isNaN(minutes) && minutes > 0) {
-                setTime(parseInt(minutes));
+            const days = parseInt(document.getElementById('days').value) || 0;
+            const hours = parseInt(document.getElementById('hours').value) || 0;
+            const minutes = parseInt(document.getElementById('minutes').value) || 0;
+            const seconds = parseInt(document.getElementById('seconds').value) || 0;
+            
+            const totalSeconds = (days * 24 * 3600) + (hours * 3600) + (minutes * 60) + seconds;
+            
+            if (totalSeconds > 0 && totalSeconds <= 365 * 24 * 3600) {
+                timerState.isRunning = false;
+                timerState.timeLeft = totalSeconds;
+                timerState.totalSeconds = totalSeconds;
+                timerState.lastUpdate = Date.now();
+                updateDisplay();
+                showNotification(`Установлено: ${formatDetailedTime(totalSeconds)}`);
+            } else {
+                showNotification('Ошибка: неверное время');
             }
         }
 
-        function setTime(minutes) {
-            window.timerData.isRunning = false;
-            window.timerData.timeLeft = minutes * 60;
-            document.getElementById('timer').style.color = '#90cdf4';
-            updateTimerDisplay();
+        function setQuickTime(minutes) {
+            const totalSeconds = minutes * 60;
+            timerState.isRunning = false;
+            timerState.timeLeft = totalSeconds;
+            timerState.totalSeconds = totalSeconds;
+            timerState.lastUpdate = Date.now();
             
-            // Показываем подтверждение
-            showNotification(`Таймер установлен на ${minutes} минут`);
+            // Обновляем поля ввода
+            const days = Math.floor(minutes / 1440);
+            const hours = Math.floor((minutes % 1440) / 60);
+            const mins = minutes % 60;
+            
+            document.getElementById('days').value = days;
+            document.getElementById('hours').value = hours;
+            document.getElementById('minutes').value = mins;
+            document.getElementById('seconds').value = 0;
+            
+            updateDisplay();
+            showNotification(`Установлено: ${formatDetailedTime(totalSeconds)}`);
+        }
+
+        function shareToChannel() {
+            const webAppUrl = window.location.origin + '/viewer.html';
+            const message = `⏰ ТАЙМЕР ЗАПУЩЕН\n\nСледите за временем в реальном времени!\n\nНажмите кнопку ниже 👇`;
+            
+            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(webAppUrl)}&text=${encodeURIComponent(message)}`;
+            
+            showNotification('Открываю Telegram для публикации...');
+            setTimeout(() => {
+                window.open(shareUrl, '_blank');
+            }, 1000);
         }
 
         function showNotification(message) {
-            // Временное уведомление
             const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: #38a169;
-                color: white;
-                padding: 10px 20px;
-                border-radius: 10px;
-                z-index: 1000;
-                font-size: 14px;
-            `;
+            notification.className = 'notification';
             notification.textContent = message;
             document.body.appendChild(notification);
             
             setTimeout(() => {
                 document.body.removeChild(notification);
-            }, 2000);
+            }, 3000);
         }
-
-        // Основной цикл таймера
-        setInterval(() => {
-            if (window.timerData.isRunning && window.timerData.timeLeft > 0) {
-                window.timerData.timeLeft--;
-                updateTimerDisplay();
-            }
-        }, 1000);
 
         // Инициализация
         Telegram.WebApp.ready();
         Telegram.WebApp.expand();
-        updateTimerDisplay();
+        
+        loadState();
+        updateDisplay();
+        
+        // Автообновление таймера
+        setInterval(() => {
+            if (timerState.isRunning && timerState.timeLeft > 0) {
+                timerState.timeLeft--;
+                updateDisplay();
+            }
+        }, 1000);
+        
+        // Автосохранение каждые 10 секунд
+        setInterval(saveState, 10000);
     </script>
 </body>
 </html>
