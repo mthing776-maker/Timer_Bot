@@ -1,36 +1,84 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Таймер LIVE</title>
+    <title>Таймер канала</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { text-align: center; padding: 20px; background: #1a202c; color: white; }
-        .timer { font-size: 48px; margin: 20px 0; }
-        .status { color: #90cdf4; }
+        body { 
+            text-align: center; 
+            padding: 20px; 
+            background: #2d3748; 
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        .timer { 
+            font-size: 48px; 
+            font-weight: bold; 
+            margin: 20px 0; 
+            color: #68d391;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        .status { 
+            color: #cbd5e0; 
+            margin: 10px 0; 
+            font-size: 16px;
+        }
+        .channel-name { 
+            color: #90cdf4; 
+            font-size: 18px; 
+            margin-bottom: 20px;
+        }
+        .viewer-note {
+            margin-top: 20px;
+            font-size: 12px;
+            opacity: 0.6;
+        }
     </style>
 </head>
 <body>
+    <div class="channel-name">📢 Таймер канала</div>
     <h1>⏰ Таймер LIVE</h1>
     <div class="timer" id="timer">10:00</div>
-    <div class="status" id="status">Ожидание...</div>
+    <div class="status" id="status">⏳ Ожидание запуска...</div>
+    <div class="viewer-note">
+        Обновляется в реальном времени • Только для просмотра
+    </div>
 
     <script>
         function updateViewerTimer() {
-            const savedTime = localStorage.getItem('timerValue') || 600;
-            const isRunning = localStorage.getItem('timerRunning') === 'true';
+            const savedTime = parseInt(localStorage.getItem('channelTimerValue')) || 600;
+            const isRunning = localStorage.getItem('channelTimerRunning') === 'true';
+            const lastUpdate = parseInt(localStorage.getItem('channelTimerUpdated')) || 0;
+            const savedText = localStorage.getItem('channelTimerText') || '10:00';
             
-            const minutes = Math.floor(savedTime / 60);
-            const seconds = savedTime % 60;
+            // Проверяем актуальность данных (обновлялись в последние 5 секунд)
+            const isDataFresh = (Date.now() - lastUpdate) < 5000;
             
-            document.getElementById('timer').textContent = 
-                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            
-            document.getElementById('status').textContent = 
-                isRunning ? '⏱️ Таймер идет...' : '⏸️ На паузе';
+            if (isDataFresh) {
+                document.getElementById('timer').textContent = savedText;
+                
+                if (savedTime <= 0) {
+                    document.getElementById('status').textContent = '⏰ Время вышло!';
+                    document.getElementById('timer').style.color = '#f56565';
+                } else {
+                    document.getElementById('status').textContent = 
+                        isRunning ? '🟢 Таймер идет...' : '🟡 На паузе';
+                    document.getElementById('timer').style.color = 
+                        isRunning ? '#68d391' : '#ecc94b';
+                }
+            } else {
+                document.getElementById('status').textContent = '⚪ Таймер не активен';
+                document.getElementById('timer').style.color = '#a0aec0';
+            }
         }
 
+        // Обновляем каждую секунду
         setInterval(updateViewerTimer, 1000);
         updateViewerTimer();
+
+        // Инициализация Telegram Web App
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
     </script>
 </body>
 </html>
