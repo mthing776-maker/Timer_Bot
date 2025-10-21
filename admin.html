@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Таймер Админ</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { text-align: center; padding: 20px; background: #2d3748; color: white; }
+        .timer { font-size: 48px; margin: 20px 0; }
+        button { background: white; color: #2d3748; border: none; padding: 10px 20px; margin: 5px; border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <h1>⏰ Таймер (Админ)</h1>
+    <div class="timer" id="timer">10:00</div>
+    <div>
+        <button onclick="startTimer()">Старт</button>
+        <button onclick="pauseTimer()">Пауза</button>
+        <button onclick="resetTimer()">Сброс</button>
+        <button onclick="setCustomTime()">Установить время</button>
+    </div>
+
+    <script>
+        let timeLeft = 600;
+        let isRunning = false;
+        let timerInterval;
+
+        function updateTimer() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timer').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Сохраняем время в localStorage (для viewer.html)
+            localStorage.setItem('timerValue', timeLeft);
+            localStorage.setItem('timerRunning', isRunning);
+            
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                isRunning = false;
+            } else if (isRunning) {
+                timeLeft--;
+            }
+        }
+
+        function startTimer() { isRunning = true; }
+        function pauseTimer() { isRunning = false; }
+        function resetTimer() { timeLeft = 600; isRunning = false; updateTimer(); }
+        
+        function setCustomTime() {
+            const minutes = prompt('Минуты:', '10');
+            if (minutes) {
+                timeLeft = parseInt(minutes) * 60;
+                updateTimer();
+            }
+        }
+
+        setInterval(updateTimer, 1000);
+        updateTimer();
+    </script>
+</body>
+</html>
